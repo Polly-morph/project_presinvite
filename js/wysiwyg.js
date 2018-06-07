@@ -1,0 +1,447 @@
+'use strict';
+angular.module('ngWYSIWYG', ['ngSanitize']);
+
+angular.module('ngWYSIWYG').directive('wframe', ['$compile', '$timeout',
+    function ($compile, $timeout) {
+        //kudos http://stackoverflow.com/questions/13881834/bind-angular-cross-iframes-possible
+        var linker = function (scope, $element, attrs, ctrl) {
+            var $document = $element[0].contentDocument;
+            $element[0].id = 'internalIframe';
+            $document.open(); //kudos: http://stackoverflow.com/questions/15036514/why-can-i-not-set-innerhtml-of-an-iframe-body-in-firefox
+            $document.write('<!DOCTYPE html><html><head></head><body ng-model="editedContent"  strip-br="true"></body></html>');
+            $document.close();
+            $document.designMode = 'On';
+            var $body = angular.element($element[0].contentDocument.body);
+            var $head = angular.element($element[0].contentDocument.head);
+            $body.attr('contenteditable', 'true');
+
+            /*
+             $element.bind('load', function (event) {
+             console.log('iframe loaded');
+             $document.designMode = 'On';
+             });
+             */
+
+            //model --> view
+            ctrl.$render = function () {
+                //$body.html(ctrl.$viewValue || ''); //not friendly with jQuery
+                $body[0].innerHTML = ctrl.$viewValue || '';
+            }
+
+            scope.sync = function () {
+                scope.$evalAsync(function (scope) {
+                    ctrl.$setViewValue($body.html());
+                });
+            }
+
+            //view --> model
+            $body.bind('blur keyup change paste', function () {
+                scope.$apply(function blurkeyup() {
+                    ctrl.$setViewValue($body.html());
+                });
+            });
+
+
+            scope.range = null;
+            scope.getSelection = function () {
+                if ($document.getSelection) {
+                    var sel = $document.getSelection();
+                    if (sel.getRangeAt && sel.rangeCount) {
+                        scope.range = sel.getRangeAt(0);
+                    }
+                }
+            }
+            scope.restoreSelection = function () {
+                if (scope.range && $document.getSelection) {
+                    var sel = $document.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(scope.range);
+                }
+            }
+
+            scope.$on('execCommand', function (e, cmd) {
+                //console.log('***********');
+                //console.log('>>>selection:'+scope.getSelection());
+                console.log('execCommand**: ');
+                console.log(cmd);
+                $element[0].contentDocument.body.focus();
+                //scope.getSelection();
+                var sel = $document.selection; //http://stackoverflow.com/questions/11329982/how-refocus-when-insert-image-in-contenteditable-divs-in-ie
+                if (sel) {
+                    var textRange = sel.createRange();
+                    $document.execCommand(cmd.command, 0, cmd.arg);
+                    textRange.collapse(false);
+                    textRange.select();
+                } else {
+                    $document.execCommand(cmd.command, 0, cmd.arg);
+                }
+                //scope.restoreSelection();
+                $document.body.focus();
+                scope.sync();
+            });
+
+            //init
+            try {
+                $document.execCommand("styleWithCSS", 0, 0);
+                $document.execCommand('contentReadOnly', 0, 'false');
+            } catch (e) {
+                try {
+                    $document.execCommand("useCSS", 0, 1);
+                } catch (e) {
+                }
+            }
+        }
+        return {
+            link: linker,
+            require: 'ngModel',
+            replace: true,
+            restrict: 'AE'
+        }
+    }
+]);
+// kudos to http://codereview.stackexchange.com/questions/61847/draggable-resizeable-box
+angular.module("ngWYSIWYG").directive("ceResize", ['$document', function ($document) {
+    return function ($scope, $element, $attr) {
+        //Reference to the original
+        var $mouseDown;
+
+        // Function to manage resize up event
+        var resizeUp = function ($event) {
+            var margin = 50,
+                lowest = $mouseDown.top + $mouseDown.height - margin,
+                top = $event.pageY > lowest ? lowest : $event.pageY,
+                height = $mouseDown.top - top + $mouseDown.height;
+
+            $element.css({
+                top: top + "px",
+                height: height + "px"
+            });
+        };
+        // Function to manage resize down event
+        var resizeDown = function ($event) {
+            var margin = 50,
+                uppest = $element[0].offsetTop + margin,
+                height = $event.pageY > uppest ? $event.pageY - $element[0].offsetTop : margin;
+
+            $element.css({
+                height: height + "px"
+            });
+        };
+
+
+        var createResizer = function createResizer(className, handlers) {
+            var newElement = angular.element('<span class="' + className + '"></span>');
+            $element.append(newElement);
+            newElement.on("mousedown", function ($event) {
+
+                $document.on("mousemove", mousemove);
+                $document.on("mouseup", mouseup);
+
+                //Keep the original event around for up / left resizing
+                $mouseDown = $event;
+                $mouseDown.top = $element[0].offsetTop;
+                $mouseDown.left = $element[0].offsetLeft
+                $mouseDown.width = $element[0].offsetWidth;
+                $mouseDown.height = $element[0].offsetHeight;
+
+                function mousemove($event) {
+                    event.preventDefault();
+                    for (var i = 0; i < handlers.length; i++) {
+                        handlers[i]($event);
+                    }
+                }
+
+                function mouseup() {
+                    $document.off("mousemove", mousemove);
+                    $document.off("mouseup", mouseup);
+                }
+            });
+        }
+
+        createResizer('resizer', [resizeDown, resizeDown]);
+    };
+}]);
+angular.module('ngWYSIWYG').directive('colorsGrid', ['$compile', '$document',
+    function ($compile, $document) {
+        var linker = function (scope, element, attrs, ctrl) {
+            //click away
+            $document.on("click", function () {
+                scope.$apply(function () {
+                    scope.show = false;
+                });
+            });
+            element.parent().bind('click', function (e) {
+                e.stopPropagation();
+            });
+            scope.colors = ['#ffffff', '#000000', '#993300', '#333300', '#003300', '#003366', '#000080', '#333399', '#333333', '#800000', '#FF6600', '#808000', '#008000', '#008080', '#0000FF', '#666699', '#808080', '#FF0000', '#FF9900', '#99CC00', '#339966', '#33CCCC', '#3366FF', '#800080', '#999999', '#FF00FF', '#FFCC00', '#FFFF00', '#00FF00', '#00FFFF', '#00CCFF', '#993366', '#C0C0C0', '#FF99CC', '#FFCC99', '#FFFF99', '#CCFFCC', '#CCFFFF', '#99CCFF', '#CC99FF'];
+            scope.pick = function (color) {
+                scope.onPick({
+                    color: color
+                });
+            }
+            element.ready(function () {
+                //real deal for IE
+                function makeUnselectable(node) {
+                    if (node.nodeType == 1) {
+                        node.setAttribute("unselectable", "on");
+                        node.unselectable = 'on';
+                    }
+                    var child = node.firstChild;
+                    while (child) {
+                        makeUnselectable(child);
+                        child = child.nextSibling;
+                    }
+                }
+
+                //IE fix
+                for (var i = 0; i < document.getElementsByClassName('colors-grid').length; i += 1) {
+                    makeUnselectable(document.getElementsByClassName("colors-grid")[i]);
+                }
+            });
+        }
+        return {
+            link: linker,
+            scope: {
+                show: '=',
+                onPick: '&'
+            },
+            restrict: 'AE',
+            template: '<ul ng-show="show" class="colors-grid"><li ng-style="{\'background-color\': color}" title: "{{color}}" ng-repeat="color in colors" unselectable="on" ng-click="pick(color)"></li></ul>'
+        }
+    }
+]);
+angular.module('ngWYSIWYG').directive('symbolsGrid', ['$compile', '$document', '$sce',
+    function ($compile, $document, $sce) {
+        var linker = function (scope, element, attrs, ctrl) {
+            //click away
+            $document.on("click", function () {
+                scope.$apply(function () {
+                    scope.show = false;
+                });
+            });
+            element.parent().bind('click', function (e) {
+                e.stopPropagation();
+            });
+            scope.symbols = ['&iexcl;', '&iquest;', '&ndash;', '&mdash;', '&raquo;', '&laquo;', '&copy;', '&divide;', '&micro;', '&para;', '&plusmn;', '&cent;', '&euro;', '&pound;', '&reg;', '&sect;', '&trade;', '&yen;', '&deg;', '&forall;', '&part;', '&exist;', '&empty;', '&nabla;', '&isin;', '&notin;', '&ni;', '&prod;', '&sum;', '&uarr;', '&rarr;', '&darr;', '&spades;', '&clubs;', '&hearts;', '&diams;', '&aacute;', '&agrave;', '&acirc;', '&aring;', '&atilde;', '&auml;', '&aelig;', '&ccedil;', '&eacute;', '&egrave;', '&ecirc;', '&euml;', '&iacute;', '&igrave;', '&icirc;', '&iuml;', '&ntilde;', '&oacute;', '&ograve;', '&ocirc;', '&oslash;', '&otilde;', '&ouml;', '&szlig;', '&uacute;', '&ugrave;', '&ucirc;', '&uuml;', '&yuml;'];
+            scope.pick = function (symbol) {
+                scope.onPick({
+                    symbol: symbol
+                });
+            }
+            element.ready(function () {
+                //real deal for IE
+                function makeUnselectable(node) {
+                    if (node.nodeType == 1) {
+                        node.setAttribute("unselectable", "on");
+                        node.unselectable = 'on';
+                    }
+                    var child = node.firstChild;
+                    while (child) {
+                        makeUnselectable(child);
+                        child = child.nextSibling;
+                    }
+                }
+
+                //IE fix
+                for (var i = 0; i < document.getElementsByClassName('symbols-grid').length; i += 1) {
+                    makeUnselectable(document.getElementsByClassName("symbols-grid")[i]);
+                }
+            });
+        }
+        return {
+            link: linker,
+            scope: {
+                show: '=',
+                onPick: '&'
+            },
+            restrict: 'AE',
+            template: '<ul ng-show="show" class="symbols-grid"><li ng-repeat="symbol in symbols" unselectable="on" ng-click="pick(symbol)" ng-bind-html="symbol"></li></ul>'
+        }
+    }
+]);
+
+angular.module('ngWYSIWYG').directive('wysiwygEdit', ['$compile', '$timeout',
+    function ($compile, $timeout) {
+        var linker = function (scope, $element, attrs, ctrl) {
+            scope.editMode = false;
+            scope.fonts = ['Roboto', 'Segoe UI','Verdana', 'Arial', 'Arial Narrow', 'Courier New', 'Georgia', 'Impact', 'Tahoma', 'Times New Roman', 'Webdings', 'Trebuchet MS'];
+            scope.$watch('font', function (newValue) {
+                if (newValue) {
+                    scope.execCommand('fontname', newValue);
+                    scope.font = '';
+                }
+            });
+            scope.fontsizes = [1, 2, 3, 4, 5, 6, 7];
+            scope.$watch('fontsize', function (newValue) {
+                if (newValue) {
+                    scope.execCommand('fontsize', newValue);
+                    scope.fontsize = '';
+                }
+            });
+            scope.styles = [{
+                name: 'Paragraph',
+                key: '<p>'
+            }, {
+                name: 'Header 1',
+                key: '<h1>'
+            }, {
+                name: 'Header 2',
+                key: '<h2>'
+            }, {
+                name: 'Header 3',
+                key: '<h3>'
+            }, {
+                name: 'Header 4',
+                key: '<h4>'
+            }, {
+                name: 'Header 5',
+                key: '<h5>'
+            }, {
+                name: 'Header 6',
+                key: '<h6>'
+            }];
+            scope.$watch('textstyle', function (newValue) {
+                if (newValue) {
+                    scope.execCommand('formatblock', newValue);
+                    scope.fontsize = '';
+                }
+            });
+            scope.showFontColors = false;
+            scope.setFontColor = function (color) {
+                scope.execCommand('foreColor', color);
+            }
+            scope.showBgColors = false;
+            scope.setBgColor = function (color) {
+                scope.execCommand('hiliteColor', color);
+            }
+
+            scope.execCommand = function (cmd, arg) {
+                scope.$emit('execCommand', {
+                    command: cmd,
+                    arg: arg
+                });
+            }
+            scope.showSpecChars = false;
+            scope.insertSpecChar = function (symbol) {
+                scope.execCommand('insertHTML', symbol);
+            }
+            scope.insertLink = function () {
+                var val = prompt('Please enter the URL', 'http://');
+                scope.execCommand('createlink', val);
+            }
+            scope.insertImage = function () {
+                var val = prompt('Please enter the picture URL', 'http://');
+                scope.execCommand('insertimage', val);
+            }
+
+            scope.createPlainSlide = function () {
+                var posX= prompt('Move slide on the x-axis by (enter a value, e.g. 1000)');
+                var posY=prompt('Move slide on the y-axis by (enter a value, e.g. 100)');
+                var posZ=prompt('Move slide on the z-axis by (enter a value, e.g. 10)');
+                if(posX==null){
+                    posX=0;
+                }
+                if(posY==null){
+                    posY=0;
+                }
+                if(posZ==null){
+                    posZ=0;
+                }
+                var scale=prompt('Slide scale (enter a value, e.g. 2)');
+                var plainSlide='<div class="step" data-x="'+posX+'" data-y="'+posY+'" data-z="'+posZ+'" data-scale="'+scale+'">';
+                scope.execCommand('insertHTML', plainSlide);
+            }
+
+            scope.showSlideColors = false;
+            scope.createSlide = function (colour) {
+                if(colour==null){
+                    colour='FFFFFF';
+                }
+                var div='<div class="slide step" style="background-color:'+colour+'">';
+                scope.execCommand('insertHTML', div);
+            }
+
+            scope.createRotatedSlide = function () {
+                var posX=prompt('Rotate on x-axis by (enter a degree value between 0 and 180)');
+                var posY=prompt('Rotate on y-axis by (enter a degree value between 0 and 180)');
+                if(posX==null){
+                    posX=0;
+                }
+                if(posY==null){
+                    posY=0;
+                }
+                if(posZ==null){
+                    posZ=0;
+                }
+                var div='<div class="step"  data-rotate-x="'+posX+'" data-rotate-y="'+posY+'">';
+                scope.execCommand('insertHTML', div);
+            }
+
+            $element.ready(function () {
+                function makeUnselectable(node) {
+                    if (node.nodeType == 1) {
+                        node.setAttribute("unselectable", "on");
+                        node.unselectable = 'on';
+                    }
+                    var child = node.firstChild;
+                    while (child) {
+                        makeUnselectable(child);
+                        child = child.nextSibling;
+                    }
+                }
+
+                //IE fix
+                for (var i = 0; i < document.getElementsByClassName('tinyeditor-header').length; i += 1) {
+                    makeUnselectable(document.getElementsByClassName("tinyeditor-header")[i]);
+                }
+            });
+        }
+        return {
+            link: linker,
+            scope: {
+                content: '='
+            },
+            restrict: 'AE',
+            replace: true,
+            templateUrl: 'tpl/wysiwyg.html'
+        }
+    }
+]);
+
+
+angular.module('ngWYSIWYG')
+    .directive('contenteditable', ['$sce', 'ngSanitize', function ($sce) {
+        alert('works');
+        return {
+            restrict: 'A',  //only active on element attribute
+            require: '?ngModel', //get a hold of NgModelController
+            link: function (scope, element, attrs, ngModel) {
+                if (!ngModel)
+                    return;//if ng-model is not available do nothing
+
+                //Specify how the UI should be updated
+                ngModel.$render = function () {
+                    element.html($sce.getTrustedHtml(ngModel.$viewValue || ''));
+                };
+
+                //Listen for change events to enable binding
+                element.on('blur keyup change', function () {
+                    scope.$evalAsync(read);
+                });
+                read();//initialise
+
+                //Write data to model
+                function read() {
+                    alert('read');
+
+                    var html = element.html();
+                    //strip-br attribute is used to remove the <br> tag left by the browser when the content
+                    // editable is cleared
+                    if (attrs.stripBr && html == '<br>') {
+                        html = '';
+                    }
+                    ngModel.$setViewValue(html);
+                }
+            }
+        };
+    }]);
