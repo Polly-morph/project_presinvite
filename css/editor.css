@@ -1,0 +1,151 @@
+body {
+    font-family: Roboto, Arial;
+}
+
+#tinyeditor {
+    border: none;
+    margin: 0;
+    padding: 0;
+    font: 14px Roboto, 'Courier New', Verdana
+}
+
+.tinyeditor {
+    border: 1px solid lightgrey;
+}
+
+.tinyeditor iframe {
+    border: none;
+    background: white;
+    overflow-x: hidden
+}
+
+.tinyeditor .sizer {
+    min-height: 200px;
+    height: 400px;
+    position: relative;
+    margin-top: 10px;
+}
+
+.tinyeditor .resizer {
+    /*background: url(../images/resize.gif) 15px 15px no-repeat;*/
+    float: right;
+    height: 32px;
+    width: 32px;
+    cursor: ns-resize;
+}
+
+.tinyeditor-header {
+    height: 3rem;
+    clear: both;
+    padding: 0 5px;
+    text-align: center;
+}
+
+.tinyeditor-divider {
+    float: left;
+    width: 1px;
+    height: 30px;
+    margin: 5px;
+    background: #ccc
+}
+
+.tinyeditor-control {
+    float: left;
+    width: 34px;
+    cursor: pointer;
+    background-position-x: 0px;
+}
+
+.tinyeditor-control:hover {
+    background-color: #fff;
+    background-position-x: 34px;
+}
+
+.tinyeditor-footer {
+    height: 3.7em;
+    background: #f5f5f5;
+}
+
+.toggle {
+    float: left;
+    padding: 0 10px;
+    border-right: 1px solid #ccc;
+    cursor: pointer;
+}
+
+.toggle:hover {
+    background-color: #fff
+}
+
+.resize {
+    float: right;
+    height: 32px;
+    width: 32px;
+    /*background: url(../images/resize.gif) 15px 15px no-repeat;*/
+    cursor: s-resize
+}
+
+.colors-grid {
+    position: absolute;
+    left: 0;
+    top: 30px;
+    background-color: white;
+    width: 192px;
+    border: black solid 2px;
+    padding: 0;
+    margin: 0;
+    z-index: 100;
+}
+
+.colors-grid > li {
+    list-style: none;
+    border: white solid 2px;
+    float: left;
+    width: 20px;
+    height: 20px;
+}
+
+.colors-grid > li:hover {
+    opacity: 0.7;
+}
+
+.symbols-grid {
+    position: absolute;
+    left: 0;
+    top: 30px;
+    background-color: white;
+    width: 384px;
+    border: black solid 2px;
+    padding: 0;
+    margin: 0;
+    z-index: 100;
+}
+
+.symbols-grid > li {
+    list-style: none;
+    border: rgb(231, 231, 231) solid 1px;
+    float: left;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    font-size: 1.3em;
+}
+
+.symbols-grid > li:hover {
+    opacity: 0.7;
+    font-size: 1.7em;
+}
+
+.editorSelect {
+    height: 2.2rem !important;
+    font-size: 12pt;
+    margin-top: 5px;
+}
+
+.flaticon-subscript {
+    margin-top: 3pt;
+}
+
+.flaticon-superscript1 {
+    line-height: 1.6em;
+}

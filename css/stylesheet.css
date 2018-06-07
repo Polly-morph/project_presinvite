@@ -1,0 +1,180 @@
+html {
+    min-height: 100%;
+    position:relative;
+}
+
+body {
+    padding: 0;
+    margin:0 0 150px 0;
+}
+main{
+    margin-bottom:110pt;
+}
+@font-face {
+    font-family: 'Segoe Script';
+    src: url('../font/segoe_script/segoesc.ttf');
+}
+
+#loggedin nav.row {
+    position: fixed;
+}
+
+nav {
+    -webkit-box-shadow: 0 0 0 0 rgba(255, 255, 255, 1) !important;
+    -moz-box-shadow: 0 0 0 0 rgba(255, 255, 255, 1) !important;
+    -o-box-shadow: 0 0 0 0 rgba(255, 255, 255, 1) !important;
+    -box-shadow: 0 0 0 0 rgba(255, 255, 255, 1) !important;
+}
+
+.logo {
+    font-family: 'Segoe Script', Arial;
+    font-size: 2.2em;
+}
+
+.logoIndent {
+    margin-left: 5.4% !important;
+}
+
+nav img {
+    /*    border: 1px solid white;*/
+    margin: 7px;
+    padding: 3px;
+    object-fit: cover;
+    width: 54px;
+    height: 52px;
+}
+
+img.profilePic {
+    margin: 7px;
+    padding: 3px;
+    height: 90px;
+    width: 90px;
+}
+
+i.profilePic {
+    font-size: 3rem;
+}
+
+.profilePicPreview {
+    margin: 7px;
+    padding: 3px;
+    height: 220px;
+    width: 220px;
+}
+
+img.presProfilePic {
+    margin: 7px;
+    padding: 3px;
+    height: 90px;
+    width: 90px;
+}
+
+i.presProfilePic {
+    margin-top: -10px;
+}
+
+.align-right {
+    float: right;
+}
+
+.align-left {
+    float: left;
+}
+
+#presTitle {
+    font-size: 18pt;
+}
+
+.indent {
+    margin-left: 25pt !important;
+}
+
+.smallIndent {
+    margin-left: 10px !important;
+}
+
+iframe {
+    border: none;
+}
+
+nav div ul li a {
+    font-weight: bold;
+}
+
+tag {
+    font-size: 15px;
+    padding: 15px;
+    float: right;
+}
+
+.card tag {
+    position: absolute;
+    bottom: 30px;
+    right: 0;
+}
+
+.preview {
+    position: relative;
+    right: -11px;
+    top: 10px;
+}
+
+.name {
+    font-size: 14pt;
+}
+
+.align-middle {
+    margin-top: 2.2rem;
+}
+
+.align-center {
+    text-align: center;
+}
+
+.position-top {
+    position: absolute;
+    float: right;
+    top: 0;
+    right: 10px;
+}
+
+.position-bottom {
+    position: absolute;
+    float: right;
+    bottom: 0;
+}
+
+.valign-top {
+    display: inline;
+    vertical-align: top;
+}
+
+.cardPadding {
+    padding: 30px !important;
+    margin-left: 5.4% !important;
+}
+
+.editCard {
+    height: 200px;
+}
+
+.frameScale {
+    -webkit-transform: scale(0.5);
+    -webkit-transform-origin: 0;
+    -ms-zoom: 0.5;
+    -moz-transform: scale(0.5);
+    -moz-transform-origin: 0;
+    -o-transform: scale(0.5);
+    o-transofrm-origin: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+footer {
+    position:absolute;
+    left:0;
+    width: 100%;
+    height:100px;
+    bottom: 0;
+}

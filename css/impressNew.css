@@ -1,0 +1,12 @@
+.frameScale {
+    -webkit-transform: scale(0.5);
+    -webkit-transform-origin: 0;
+    -ms-zoom: 0.5;
+    -moz-transform: scale(0.5);
+    -moz-transform-origin: 0;
+    -o-transform: scale(0.5);
+    o-transofrm-origin: 0;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
